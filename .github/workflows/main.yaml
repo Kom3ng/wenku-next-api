@@ -11,9 +11,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: action/checkout@v2
-      - name: Copy file
-        uses: actions/filesystem@v1
-        with:
-          paths-to-copy: main.yaml
-          destination-folder: docs/
+        uses: actions/checkout@v2
+      - run: cp ./main.yaml ./docs/main.yaml
