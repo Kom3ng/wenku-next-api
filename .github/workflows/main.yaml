@@ -6,7 +6,14 @@ on:
       - master
 
 jobs:
-  main:
+  copy_file:
+    name: Copy main.yaml
     runs-on: ubuntu-latest
     steps:
-      - run: cp main.yaml public/main.yaml
+      - name: Checkout repository
+        uses: action/checkout@v2
+      - name: Copy file
+        uses: actions/filesystem@v1
+        with:
+          paths-to-copy: main.yaml
+          destination-folder: docs/
