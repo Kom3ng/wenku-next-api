@@ -1,0 +1,406 @@
+openapi: 3.0.3
+info:
+  title: 轻小说文库next API文档
+  description: 轻小说文库next API文档
+  version: 0.1.0
+  license:
+    name: MIT
+    url: https://mit-licens.org
+servers:
+  - url: 'https://localhost/v0'
+components:
+  parameters:
+    bookid:
+      name: bookid
+      schema:
+        type: integer
+      in: path
+      description: 书籍id
+    classid:
+      name: classid
+      schema:
+        type: integer
+        default: 0
+      in: path
+      description: 书架组别
+  securitySchemes:
+    token:
+      type: http
+      scheme: bearer
+  schemas:
+    ChapterLocation:
+      type: object
+      properties:
+        title:
+          type: string
+        bookId:
+          type: integer
+        chapterId:
+          type: integer
+        bid:
+          type: integer
+    BookSnapshot:
+      description: 带封面的图书预览(类似首页的
+      type: object
+      properties:
+        title:
+          type: string
+        cover:
+          type: string
+          format: uri
+        id:
+          type: integer
+    DownloadLinks:
+      description: 下在链接
+      type: object
+      properties:
+        simplifiedGbk:
+          type: array
+          items:
+            type: string
+            format: uri
+        simplifiedUtf:
+          type: array
+          items:
+            type: string
+            format: uri
+        traditionalUtf:
+          type: array
+          items:
+            type: string
+            format: uri
+paths:
+  /login:
+    post:
+      description: 登陆
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                  format: password
+      responses:
+        200:
+          description: 登陆令牌
+          content:
+            application/json:
+              schema:
+                type: string
+        401:
+          description: 密码错误
+  /me:
+    get:
+      security:
+        - token: []
+      description: 获取个人信息
+      responses:
+        200:
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  username:
+                    type: string
+                  nick:
+                    type: string
+                  rank:
+                    type: string
+                  title:
+                    type: string
+                  sex:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+                  qq:
+                    type: string
+                    description: qq号
+                  website:
+                    type: string
+                    format: uri
+                  avatar:
+                    type: string
+                    format: uri
+                  registerTime:
+                    type: string
+                    format: date
+                  contribute:
+                    type: integer
+                    description: 贡献值
+                  exp:
+                    type: integer
+                    description: 经验值
+                  point:
+                    type: integer
+                    description: 积分
+                  friendMax:
+                    type: integer
+                    description: 最大好友数
+                  messageMax:
+                    type: integer
+                    description: 信箱最多消息数
+                  collectMax:
+                    type: integer
+                    description: 书架最大收藏量
+                  recommendMaxDaily:
+                    type: integer
+                    description: 每日最大推荐次数
+                  sign:
+                    type: string
+                    description: 用户签名
+                  summary:
+                    type: string
+                    description: 个人简介
+  /bookcase/{classid}:
+    parameters:
+      - $ref: '#/components/parameters/classid'
+    get:
+      description: 获取书架内容
+      security:
+        - token: []
+      responses:
+        200:
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  maxCapacity:
+                    type: integer
+                  collectedCount:
+                    type: integer
+                  classCollectedCount:
+                    type: integer
+                  books:
+                    type: array
+                    description: 书
+                    items:
+                      type: object
+                      properties:
+                        bookInfo:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            title:
+                              type: string
+                            author:
+                              type: string
+                            latestChapter:
+                              $ref: '#/components/schemas/ChapterLocation'
+                        lastUpdate:
+                          type: string
+                          format: date
+                        bookMark:
+                          $ref: '#/components/schemas/ChapterLocation'
+  /bookcase/{classid}/collect/{bookid}:
+    parameters:
+      - $ref: '#/components/parameters/bookid'
+      - $ref: '#/components/parameters/classid'
+    put:
+      security:
+        - token: []
+      description: 收藏书籍
+      responses:
+        200:
+          description: ok
+  /book/{bookid}/info:
+    parameters:
+      - $ref: '#/components/parameters/bookid'
+    get:
+      description: 获取书籍信息
+      responses:
+        200:
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  classify:
+                    type: string
+                    description: 文库分类
+                  author:
+                    type: string
+                  state:
+                    type: string
+                  lastUpdate:
+                    type: string
+                    format: date
+                  length:
+                    type: string
+                  cover:
+                    type: string
+                    format: uri
+                  tags:
+                    type: array
+                    items:
+                      type: string
+                  popularity:
+                    type: string
+                  rise:
+                    type: string
+                    description: 热度上升指数
+                  latestChapter:
+                    $ref: '#/components/schemas/ChapterLocation'
+                  summary:
+                    type: string
+                  animation:
+                    type: boolean
+                    description: 是否动画化
+                  similarities:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BookSnapshot'
+                  finishedSimilarities:
+                    type: array
+                    description: 相似已完结
+                    items:
+                      $ref: '#/components/schemas/BookSnapshot'
+  /book/{bookid}/chapters:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/bookid'
+      description: 获取书籍的章节内容
+      responses:
+        200:
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  description: 分卷
+                  properties:
+                    title:
+                      type: string
+                    chapters:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/ChapterLocation'
+
+  /book/{bookid}/chapter/{chapterid}:
+    parameters:
+      - $ref: '#/components/parameters/bookid'
+      - name: chapterid
+        in: path
+    get:
+      responses:
+        200:
+          description: ok
+          content:
+            application/json:
+              schema:
+                description: 章节内容
+                type: string
+  /book/{bookid}/download/volumes-txt:
+    parameters:
+      - $ref: '#/components/parameters/bookid'
+    get:
+      security:
+        - token: []
+      responses:
+        200:
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                    links:
+                      $ref: '#/components/schemas/DownloadLinks'
+                    autoRenameLinks:
+                      $ref: '#/components/schemas/DownloadLinks'
+  /book/{bookid}/download/txt:
+    parameters:
+       - $ref: '#/components/parameters/bookid'
+    get:
+      security:
+        - token: []
+      responses:
+        200:
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  lastUpdate:
+                    type: string
+                    format: date
+                  gbkSize:
+                    type: string
+                  utfSize:
+                    type: string
+                  links:
+                    $ref: '#/components/schemas/DownloadLinks'
+  /search:
+    parameters:
+      - name: type
+        in: query
+        schema:
+          enum:
+            - articlename
+            - author
+          default: articlename
+      - name: keyword
+        in: query
+        schema:
+          type: string
+        description: 搜索关键字
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+    get:
+      security:
+        - token: []
+      responses:
+        200:
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  pages:
+                    type: integer
+                  books:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        bookSnapshot:
+                          $ref: '#/components/schemas/BookSnapshot'
+                        classify:
+                          type: string
+                        length:
+                          type: integer
+                        summary:
+                          type: string
+                        state:
+                          type: string
+                        animation:
+                          type: boolean
+                        tags:
+                          type: array
+                          items:
+                            type: string
+                        author:
+                          type: string
